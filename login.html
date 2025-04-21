@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dumb Passwords</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .video-container {
+            margin: 20px 0;
+            position: relative;
+        }
+
+        #videoElement {
+            width: 100%;
+            border-radius: 5px;
+            background-color: #ddd;
+        }
+
+        .gesture-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button.secondary {
+            background-color: #6c757d;
+        }
+
+        button.secondary:hover {
+            background-color: #545b62;
+        }
+
+        .register-button {
+            background-color: #28a745;
+            margin-top: 20px;
+        }
+
+        .register-button:hover {
+            background-color: #218838;
+        }
+
+        #recordStatus {
+            text-align: center;
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .gesture-controls button {
+            width: auto;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .nav-buttons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .nav-button:hover {
+            background-color: #5a6268;
+        }
+
+        .warninglol {
+            text-align: center;
+            color: #dc3545;
+            margin-top: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="nav-buttons">
+            <a href="index.html" class="nav-button">Home</a>
+        </div>
+        <h1>Sign In</h1>
+        <p class="warninglol">pls dont store any important passwords in here</p>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <div class="video-container">
+                <video id="videoElement" playsinline></video>
+                <div id="recordStatus">Ready to record gesture</div>
+                <div class="gesture-controls">
+                    <button type="button" id="startRecording" class="secondary", center >Start Recording Gesture</button>
+                    <button type="button" id="stopRecording" class="secondary", centerdisabled>Stop Recording</button>
+                </div>
+            </div>
+
+            <button type="submit" id="signInButton">Sign In</button>
+        </form>
+
+        <a href="index.html">
+            <button type="button" class="register-button">Create New Account</button>
+        </a>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('videoElement');
+        let isRecording = false;
+        let gestureSequence = [];
+        let lastGesture = '';
+        
+        const hands = new Hands({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        }});
+        
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+        
+        hands.onResults(results => {
+            if (results.multiHandLandmarks) {
+                for (const landmarks of results.multiHandLandmarks) {
+                    const keypoints = landmarks.map(landmark => ({
+                        x: landmark.x * videoElement.videoWidth,
+                        y: landmark.y * videoElement.videoHeight,
+                        z: landmark.z
+                    }));
+                    
+           
+                    const isThumbUp = keypoints[4].y < keypoints[3].y - 30;
+                    const isIndexUp = keypoints[8].y < keypoints[6].y - 30;
+                    const isMiddleUp = keypoints[12].y < keypoints[10].y - 30;
+                    const isRingUp = keypoints[16].y < keypoints[14].y - 30;
+                    const isPinkyUp = keypoints[20].y < keypoints[18].y - 30;
+                    
+                    let detectedGesture = '';
+                    if (isThumbUp && !isIndexUp && !isMiddleUp && !isRingUp && !isPinkyUp) {
+                        detectedGesture = 'Thumbs Up';
+                    } else if (isIndexUp && isMiddleUp && !isRingUp && !isPinkyUp) {
+                        detectedGesture = 'Victory';
+                    } else if (isIndexUp && !isMiddleUp && !isRingUp && !isPinkyUp) {
+                        detectedGesture = 'Pointing';
+                    } else if (!isThumbUp && !isIndexUp && !isMiddleUp && !isRingUp && !isPinkyUp) {
+                        detectedGesture = 'Fist';
+                    } else if (isIndexUp && isMiddleUp && isRingUp && isPinkyUp) {
+                        detectedGesture = 'Open Hand';
+                    }
+                    
+               
+                    if (detectedGesture) {
+                        document.getElementById('recordStatus').textContent = 
+                            isRecording ? 
+                            `Recording... Current: ${detectedGesture}` : 
+                            `Current: ${detectedGesture}`;
+                    }
+                    
+                   
+                    if (isRecording && detectedGesture && detectedGesture !== lastGesture) {
+                        gestureSequence.push(detectedGesture);
+                        lastGesture = detectedGesture;
+                        document.getElementById('recordStatus').textContent = 
+                            `Recording... Sequence: ${gestureSequence.join(' -> ')}`;
+                    }
+                }
+            }
+        });
+        
+        document.getElementById('startRecording').addEventListener('click', () => {
+            isRecording = true;
+            gestureSequence = [];
+            lastGesture = '';
+            document.getElementById('startRecording').disabled = true;
+            document.getElementById('stopRecording').disabled = false;
+            document.getElementById('recordStatus').textContent = 'Recording started...';
+        });
+        
+        document.getElementById('stopRecording').addEventListener('click', () => {
+            isRecording = false;
+            document.getElementById('startRecording').disabled = false;
+            document.getElementById('stopRecording').disabled = true;
+            document.getElementById('recordStatus').textContent = 
+                `Recorded sequence: ${gestureSequence.join(' -> ')}`;
+        });
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            
+            if (!username) {
+                alert('Please enter your username');
+                return;
+            }
+
+            if (gestureSequence.length === 0) {
+                alert('Please record your gesture password');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/signin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        gesture: gestureSequence.join(' -> ')
+                    })
+                });
+
+                const responseText = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (jsonError) {
+                    console.error('Server response:', responseText);
+                    throw new Error('Server returned an invalid response. Please check if the server is running.');
+                }
+                
+                if (response.ok) {
+                    alert('Login successful!');
+                    window.location.href = `passwords.html?userId=${data.userId}`;
+                } else {
+                    alert(data.message || 'Login failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            }
+        });
+        
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await hands.send({image: videoElement});
+            },
+            width: 480,
+            height: 360
+        });
+
+        camera.start();
+    </script>
+</body>
+</html> 

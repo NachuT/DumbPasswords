@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dumb Passwords</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .form-container {
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .login-button {
+            background-color: #6c757d;
+            margin-top: 20px;
+        }
+
+        .login-button:hover {
+            background-color: #545b62;
+        }
+
+        .video-container {
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .input-video {
+            width: 100%;
+            border-radius: 5px;
+            background-color: #ddd;
+        }
+
+        .output-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .gesture-text {
+            text-align: center;
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .sequence-display {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            min-height: 50px;
+        }
+
+        .section {
+            margin-top: 30px;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .nav-buttons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .nav-button:hover {
+            background-color: #5a6268;
+        }
+
+        .warninglol {
+            text-align: center;
+            color: #dc3545;
+            margin-top: 20px;
+            font-style: italic;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3/drawing_utils.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-buttons">
+            <a href="login.html" class="nav-button">Login</a>
+        </div>
+        <h1>Dumb Passwords</h1>
+        <p class="warninglol">pls dont store any important passwords in here</p>
+
+        <div id="registration-form" class="form-container">
+            <h2>Register</h2>
+            <input type="text" id="username" placeholder="Username" class="input-field">
+            <input type="email" id="email" placeholder="Email" class="input-field">
+            <button id="register-btn" class="btn">Continue to Gesture Setup</button>
+            <a href="login.html">
+                <button type="button" class="btn login-button">Already have an account? Sign In</button>
+            </a>
+        </div>
+
+        <div id="gesture-setup" class="section" style="display: none;">
+            <h2>Set Your Gesture Password</h2>
+            <div class="video-container">
+                <video id="input-video" class="input-video"></video>
+                <canvas id="output-canvas" class="output-canvas"></canvas>
+            </div>
+            <div class="controls">
+                <button id="start-btn" class="btn">Start Recording</button>
+                <button id="stop-btn" class="btn">Stop Recording</button>
+                <div id="gesture-text" class="gesture-text">No hand detected</div>
+                <div id="sequence-display" class="sequence-display"></div>
+            </div>
+            <button id="save-gesture-btn" class="btn">Complete Registration</button>
+        </div>
+
+        <div id="login-form" class="form-container" style="display: none;">
+            <h2>Login</h2>
+            <input type="text" id="login-username" placeholder="Username" class="input-field">
+            <button id="login-btn" class="btn">Continue to Gesture</button>
+        </div>
+
+        <div id="login-gesture" class="section" style="display: none;">
+            <h2>Enter Your Gesture Password</h2>
+            <div class="video-container">
+                <video id="login-video" class="input-video"></video>
+                <canvas id="login-canvas" class="output-canvas"></canvas>
+            </div>
+            <div class="controls">
+                <button id="login-start-btn" class="btn">Start Recording</button>
+                <button id="login-stop-btn" class="btn">Stop Recording</button>
+                <div id="login-gesture-text" class="gesture-text">No hand detected</div>
+                <div id="login-sequence-display" class="sequence-display"></div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
